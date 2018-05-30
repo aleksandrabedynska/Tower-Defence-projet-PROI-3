@@ -1,0 +1,118 @@
+#include "SFML/Graphics.hpp"
+#include <iostream>
+#include "Enemy.h"
+#include <cstdlib>
+#include <vector>
+#include "Tower.h"
+
+#include "Target.h"
+#include "MovingObj.h"
+int main() {
+	srand(time(NULL));
+	int windowWidth = 1024;
+	int windowHeigth = 768;
+	sf::RenderWindow renderWindow(sf::VideoMode(windowWidth, windowHeigth), "Tower Defence");
+	sf::Event event;
+	//sf::Clock clock;
+	Tower tower(100, 100);
+	std::vector<Enemy> enemies;
+	std::vector<Tower> arrows;
+	Enemy enemy(100, 100);
+	for (int i = 0; i < 5; ++i) {
+		enemy.setPosition(rand() % (windowWidth - 100), rand() % (windowHeigth - 100));
+		enemies.push_back(Enemy(enemy));
+	}
+
+	Target treasure(windowWidth - 500, windowHeigth - 500); //1
+	std::vector<MovingObj> enemies1;
+	for (int i = 0; i < 10; i++)
+	{
+		MovingObj enemy(rand() % 2000, rand() % 1000);
+		enemy.setHome(enemy.getPosition());
+		enemy.setSpeed(0.1);
+		enemy.setBearing(treasure.getPosition());
+		enemies1.push_back(enemy);
+	}
+	for (int i = 0; i < enemies1.size(); i++)
+	{
+		std::cout << "enemy init " << i << std::endl;
+	}														//1
+
+	float vX, vY;
+	int abc = 1;
+	while (renderWindow.isOpen()) {
+		// Check for all the events that occured since the last frame.
+		while (renderWindow.pollEvent(event)) {
+			//Handle events here
+			if (event.type == sf::Event::EventType::Closed)
+				renderWindow.close();
+		}
+		// A microsecond is 1/1,000,000th of a second, 1000 microseconds == 1 millisecond
+		//std::cout << "Elapsed time since previous frame(microseconds): " << clock.getElapsedTime().asMicroseconds() << std::endl;
+		// Start the countdown over.  Think of laps on a stop watch.
+		//clock.restart();
+
+		renderWindow.clear(sf::Color(0, 153, 0));			//4
+
+		if (abc % 100 == 0) {
+			//	tower.setPosition(100, 100);
+			arrows.push_back(Tower(tower));
+			tower.searchTarget(enemies);
+			tower.aim(enemies);
+		}
+
+		for (int i = 0; i < enemies1.size(); i++)						//2
+		{
+			enemies1[i].update();
+			if (enemies1[i].reachedTarget(treasure) == true)
+			{
+				enemies1[i].setBearing(enemies1[i].getHome());
+				enemies1[i].changeStatus();
+				treasure.changeStatus();
+				std::cout << "gold left" << treasure.goldLeft() << std::endl;
+
+			}
+
+		}
+		enemies1[2].gotShot();											//2
+
+
+
+
+		for (int i = 0; i < enemies.size(); ++i) {
+			enemies[i].update(windowWidth, windowHeigth);
+		}
+		for (int i = 0; i < arrows.size(); ++i) {
+			arrows[i].update();
+		}
+		//tower.update();
+		renderWindow.clear();
+		//renderWindow.draw(enemy.getShape());
+		for (int i = 0; i < enemies.size(); ++i) {
+			renderWindow.draw(enemies[i].getShape());
+		}
+		for (int i = 0; i < arrows.size(); ++i) {
+			renderWindow.draw(arrows[i].getArrowShape());
+		}
+		renderWindow.draw(tower.getShape());
+		renderWindow.draw(tower.getArrowShape());
+
+
+		//renderWindow.clear(sf::Color(0, 153, 0));				//3
+
+		renderWindow.draw(treasure.getShape());
+		for (int i = 0; i < enemies1.size(); i++)
+		{
+			renderWindow.draw(enemies1[i].getShape());
+		}												//3
+		
+		
+
+
+
+
+		renderWindow.display();
+		abc++;
+	}
+
+}
